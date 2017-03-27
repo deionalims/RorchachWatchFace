@@ -302,8 +302,8 @@ public class RorchachWatchFace extends CanvasWatchFaceService {
             Digit minuteLeft;
             Digit minuteRight;
 
-            int hour = 13; mCalendar.get(Calendar.HOUR_OF_DAY);
-            int minute  = 37; mCalendar.get(Calendar.MINUTE);
+            int hour = mCalendar.get(Calendar.HOUR_OF_DAY);
+            int minute  = mCalendar.get(Calendar.MINUTE);
 
             if (hour < 10){
                 hourLeft = new Zero(getApplicationContext());

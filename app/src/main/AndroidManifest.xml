@@ -15,14 +15,14 @@
       android:theme="@android:style/Theme.DeviceDefault">
     <service
         android:name=".RorchachWatchFace"
-        android:label="@string/my_digital_name"
+        android:label="@string/rorchach_name"
         android:permission="android.permission.BIND_WALLPAPER">
       <meta-data
           android:name="android.service.wallpaper"
           android:resource="@xml/watch_face"/>
       <meta-data
           android:name="com.google.android.wearable.watchface.preview"
-          android:resource="@drawable/preview_digital"/>
+          android:resource="@drawable/screen"/>
       <meta-data
           android:name="com.google.android.wearable.watchface.preview_circular"
           android:resource="@drawable/preview_digital_circular"/>
