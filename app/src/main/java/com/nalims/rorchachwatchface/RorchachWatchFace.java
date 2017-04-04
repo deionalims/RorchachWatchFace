@@ -198,7 +198,8 @@ public class RorchachWatchFace extends CanvasWatchFaceService {
         private Paint createSecondsPaint(){
             Paint secondsPaint = new Paint();
             secondsPaint.setStyle(Paint.Style.STROKE);
-            secondsPaint.setStrokeWidth(16);
+            secondsPaint.setAntiAlias(true);
+            secondsPaint.setStrokeWidth(8);
             return secondsPaint;
         }
 
@@ -425,6 +426,8 @@ public class RorchachWatchFace extends CanvasWatchFaceService {
             Bitmap hourBitmap =
                 Bitmap.createBitmap(canvas.getWidth(), canvas.getHeight(), Bitmap.Config.ARGB_8888);
             Canvas hourCanvas = new Canvas(hourBitmap);
+            Bitmap secondsBitmap = Bitmap.createBitmap(canvas.getWidth(), canvas.getHeight(), Bitmap.Config.ARGB_8888);
+            Canvas secondsCanvas = new Canvas(secondsBitmap);
 
             // Draw the background.
             if (isInAmbientMode()) {
@@ -441,10 +444,23 @@ public class RorchachWatchFace extends CanvasWatchFaceService {
 
             drawDate(canvas);
 
-            mSecondsPaint.setColor(Color.BLACK);
-            //mSecondsPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.DST_OVER));
-            canvas.drawArc(mSecondsPadding, mSecondsPadding, canvas.getWidth() - mSecondsPadding,
-                canvas.getHeight() - mSecondsPadding, -90, 6 * second, false, mSecondsPaint);
+            if (!isInAmbientMode()){
+                mSecondsPaint.setColor(Color.BLACK);
+                //mSecondsPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.DST_OVER));
+                secondsCanvas.drawArc(mSecondsPadding, mSecondsPadding, canvas.getWidth() - mSecondsPadding,
+                    canvas.getHeight() - mSecondsPadding, -90, 6 * second, false, mSecondsPaint);
+
+                if (isInAmbientMode()) {
+                    mDatePaint.setColor(Color.BLACK);
+                } else {
+                    mDatePaint.setColor(Color.WHITE);
+                }
+                mDatePaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_IN));
+                drawDate(secondsCanvas);
+                mDatePaint.setXfermode(null);
+                canvas.drawBitmap(secondsBitmap, 0, 0, new Paint());
+            }
+
 
             hourCanvas.drawLines(hourLeft.getLeftHour(mCenterX, mCenterY, mStrokeWidth),
                 mTextPaint);
@@ -455,12 +471,13 @@ public class RorchachWatchFace extends CanvasWatchFaceService {
             hourCanvas.drawLines(minuteRight.getRightMinute(mCenterX, mCenterY, mStrokeWidth),
                 mTextPaint);
 
-            mSecondsPaint.setColor(Color.WHITE);
-            mSecondsPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_IN));
-            hourCanvas.drawArc(mSecondsPadding, mSecondsPadding, canvas.getWidth() - mSecondsPadding,
-                canvas.getHeight() - mSecondsPadding, -90, 6* second, false, mSecondsPaint);
-            mSecondsPaint.setXfermode(null);
-
+            if (!isInAmbientMode()){
+                mSecondsPaint.setColor(Color.WHITE);
+                mSecondsPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_ATOP));
+                hourCanvas.drawArc(mSecondsPadding, mSecondsPadding, canvas.getWidth() - mSecondsPadding,
+                    canvas.getHeight() - mSecondsPadding, -90, 6 * second, false, mSecondsPaint);
+                mSecondsPaint.setXfermode(null);
+            }
 
             if (isInAmbientMode()) {
                 mDatePaint.setColor(Color.BLACK);
@@ -469,9 +486,10 @@ public class RorchachWatchFace extends CanvasWatchFaceService {
             }
             mDatePaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_IN));
             drawDate(hourCanvas);
+            mDatePaint.setXfermode(null);
 
             canvas.drawBitmap(hourBitmap, 0, 0, new Paint());
-            mDatePaint.setXfermode(null);
+
         }
 
         private void drawDate(Canvas canvas) {
