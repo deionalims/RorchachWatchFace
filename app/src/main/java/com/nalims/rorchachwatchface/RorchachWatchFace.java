@@ -21,12 +21,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.Resources;
-import android.graphics.Bitmap;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.PorterDuff;
-import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.os.Bundle;
@@ -37,20 +33,10 @@ import android.support.wearable.watchface.WatchFaceStyle;
 import android.view.SurfaceHolder;
 import android.view.WindowInsets;
 import android.widget.Toast;
-import com.nalims.rorchachwatchface.Digits.Digit;
-import com.nalims.rorchachwatchface.Digits.Five;
-import com.nalims.rorchachwatchface.Digits.Four;
-import com.nalims.rorchachwatchface.Digits.Height;
-import com.nalims.rorchachwatchface.Digits.Nine;
-import com.nalims.rorchachwatchface.Digits.One;
-import com.nalims.rorchachwatchface.Digits.Seven;
-import com.nalims.rorchachwatchface.Digits.Six;
-import com.nalims.rorchachwatchface.Digits.Three;
-import com.nalims.rorchachwatchface.Digits.Two;
-import com.nalims.rorchachwatchface.Digits.Zero;
 import java.lang.ref.WeakReference;
 import java.text.DateFormat;
 import java.util.Calendar;
+import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
@@ -60,10 +46,8 @@ import java.util.concurrent.TimeUnit;
  * low-bit ambient mode, the text is drawn without anti-aliasing in ambient mode.
  */
 public class RorchachWatchFace extends CanvasWatchFaceService {
-    private static final Typeface NORMAL_TYPEFACE =
-        Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL);
-    private static final Typeface BOLD_TYPEFACE =
-        Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD);
+    private static final Typeface NORMAL_TYPEFACE = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL);
+    private static final Typeface BOLD_TYPEFACE = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD);
 
     /**
      * Update rate in milliseconds for interactive mode. We update once a second since seconds are
@@ -105,6 +89,8 @@ public class RorchachWatchFace extends CanvasWatchFaceService {
         final Handler mUpdateTimeHandler = new EngineHandler(this);
         boolean mRegisteredTimeZoneReceiver = false;
         Paint mBackgroundPaint;
+        Device device;
+
         Paint mTextPaint;
         Paint mDatePaint;
         Paint mSecondsPaint;
@@ -126,6 +112,11 @@ public class RorchachWatchFace extends CanvasWatchFaceService {
         float mCenterX;
         float mCenterY;
         float mSecondsPadding;
+        float destRectHeight;
+        Rect desUpLeftRect;
+        Rect destUpRightRect;
+        Rect destDownLeftRect;
+        Rect destDownRightRect;
 
         /**
          * Whether the display supports fewer bits for each color in ambient mode. When true, we
@@ -137,13 +128,14 @@ public class RorchachWatchFace extends CanvasWatchFaceService {
         public void onCreate(SurfaceHolder holder) {
             super.onCreate(holder);
 
-            setWatchFaceStyle(new WatchFaceStyle.Builder(RorchachWatchFace.this).setCardPeekMode(
-                WatchFaceStyle.PEEK_MODE_VARIABLE)
-                .setBackgroundVisibility(WatchFaceStyle.BACKGROUND_VISIBILITY_INTERRUPTIVE)
-                .setShowSystemUiTime(false)
-                .setAcceptsTapEvents(true)
-                .build());
+            setWatchFaceStyle(
+                new WatchFaceStyle.Builder(RorchachWatchFace.this).setCardPeekMode(WatchFaceStyle.PEEK_MODE_VARIABLE)
+                    .setBackgroundVisibility(WatchFaceStyle.BACKGROUND_VISIBILITY_INTERRUPTIVE)
+                    .setShowSystemUiTime(false)
+                    .setAcceptsTapEvents(true)
+                    .build());
             Resources resources = RorchachWatchFace.this.getResources();
+
             mYOffset = resources.getDimension(R.dimen.digital_y_offset);
 
             mBackgroundPaint = new Paint();
@@ -151,10 +143,10 @@ public class RorchachWatchFace extends CanvasWatchFaceService {
 
             mTextPaint = createTextPaint(resources.getColor(R.color.digital_text));
             mDatePaint = createDatePaint();
-            mSecondsPaint= createSecondsPaint();
+            mSecondsPaint = createSecondsPaint();
 
             mSpace = resources.getDimension(R.dimen.space);
-            mSecondsPadding = resources.getDimension(R.dimen.paddingTop);
+            mSecondsPadding = 0;// resources.getDimension(R.dimen.paddingTop);
 
             mCalendar = Calendar.getInstance();
         }
@@ -167,6 +159,13 @@ public class RorchachWatchFace extends CanvasWatchFaceService {
             mStrokeWidth = ((mCenterX / 2) - 4 * mSpace) / 2;
 
             mTextPaint.setStrokeWidth(mStrokeWidth);
+
+            destUpRightRect = new Rect(width / 2, height / 8, width, height / 2);
+            destRectHeight = (height / 8) + destUpRightRect.height() / 2;
+
+            device = new Device(getApplicationContext(), mCenterX, mCenterY);
+
+
 
             super.onSurfaceChanged(holder, format, width, height);
         }
@@ -195,11 +194,11 @@ public class RorchachWatchFace extends CanvasWatchFaceService {
             return paint;
         }
 
-        private Paint createSecondsPaint(){
+        private Paint createSecondsPaint() {
             Paint secondsPaint = new Paint();
             secondsPaint.setStyle(Paint.Style.STROKE);
             secondsPaint.setAntiAlias(true);
-            secondsPaint.setStrokeWidth(8);
+            secondsPaint.setStrokeWidth(16);
             return secondsPaint;
         }
 
@@ -246,10 +245,9 @@ public class RorchachWatchFace extends CanvasWatchFaceService {
             // Load resources that have alternate values for round watches.
             Resources resources = RorchachWatchFace.this.getResources();
             boolean isRound = insets.isRound();
-            mXOffset = resources.getDimension(
-                isRound ? R.dimen.digital_x_offset_round : R.dimen.digital_x_offset);
-            float textSize = resources.getDimension(
-                isRound ? R.dimen.digital_text_size_round : R.dimen.digital_text_size);
+            mXOffset = resources.getDimension(isRound ? R.dimen.digital_x_offset_round : R.dimen.digital_x_offset);
+            float textSize =
+                resources.getDimension(isRound ? R.dimen.digital_text_size_round : R.dimen.digital_text_size);
 
             mTextPaint.setTextSize(textSize);
         }
@@ -298,8 +296,7 @@ public class RorchachWatchFace extends CanvasWatchFaceService {
                 case TAP_TYPE_TAP:
                     // The user has completed the tap gesture.
                     // TODO: Add code to handle the tap gesture.
-                    Toast.makeText(getApplicationContext(), R.string.message, Toast.LENGTH_SHORT)
-                        .show();
+                    Toast.makeText(getApplicationContext(), R.string.message, Toast.LENGTH_SHORT).show();
                     break;
             }
             invalidate();
@@ -312,195 +309,19 @@ public class RorchachWatchFace extends CanvasWatchFaceService {
             long now = System.currentTimeMillis();
             mCalendar.setTimeInMillis(now);
 
-            Digit hourLeft;
-            Digit hourRight;
-            Digit minuteLeft;
-            Digit minuteRight;
-
-            int hour = mCalendar.get(Calendar.HOUR_OF_DAY);
-            int minute = mCalendar.get(Calendar.MINUTE);
-            int second = mCalendar.get(Calendar.SECOND);
-
-            if (hour < 10) {
-                hourLeft = new Zero(getApplicationContext());
-            } else if (hour < 20) {
-                hourLeft = new One(getApplicationContext());
-            } else {
-                hourLeft = new Two(getApplicationContext());
-            }
-
-            int hourRightUnit = hour % 10;
-
-            switch (hourRightUnit) {
-                case 0:
-                    hourRight = new Zero(getApplicationContext());
-                    break;
-                case 1:
-                    hourRight = new One(getApplicationContext());
-                    break;
-                case 2:
-                    hourRight = new Two(getApplicationContext());
-                    break;
-                case 3:
-                    hourRight = new Three(getApplicationContext());
-                    break;
-                case 4:
-                    hourRight = new Four(getApplicationContext());
-                    break;
-                case 5:
-                    hourRight = new Five(getApplicationContext());
-                    break;
-                case 6:
-                    hourRight = new Six(getApplicationContext());
-                    break;
-                case 7:
-                    hourRight = new Seven(getApplicationContext());
-                    break;
-                case 8:
-                    hourRight = new Height(getApplicationContext());
-                    break;
-                case 9:
-                default:
-                    hourRight = new Nine(getApplicationContext());
-                    break;
-            }
-
-            boolean shouldTweakFive = false;
-            int minuteRightUnit = minute % 10;
-            switch (minuteRightUnit) {
-                case 0:
-                    minuteRight = new Zero(getApplicationContext());
-                    break;
-                case 1:
-                    minuteRight = new One(getApplicationContext());
-                    shouldTweakFive = true;
-                    break;
-                case 2:
-                    minuteRight = new Two(getApplicationContext());
-                    break;
-                case 3:
-                    minuteRight = new Three(getApplicationContext());
-                    break;
-                case 4:
-                    minuteRight = new Four(getApplicationContext());
-                    break;
-                case 5:
-                    minuteRight = new Five(getApplicationContext());
-                    break;
-                case 6:
-                    minuteRight = new Six(getApplicationContext());
-                    break;
-                case 7:
-                    minuteRight = new Seven(getApplicationContext());
-                    break;
-                case 8:
-                    minuteRight = new Height(getApplicationContext());
-                    break;
-                case 9:
-                default:
-                    minuteRight = new Nine(getApplicationContext());
-                    break;
-            }
-
-            if (minute < 10) {
-                minuteLeft = new Zero(getApplicationContext());
-            } else if (minute < 20) {
-                minuteLeft = new One(getApplicationContext());
-            } else if (minute < 30) {
-                minuteLeft = new Two(getApplicationContext());
-            } else if (minute < 40) {
-                minuteLeft = new Three(getApplicationContext());
-            } else if (minute < 50) {
-                minuteLeft = new Four(getApplicationContext());
-            } else {
-                minuteLeft = new Five(getApplicationContext());
-                ((Five) minuteLeft).setArrangeWithOne(shouldTweakFive);
-            }
-
-            if ((minuteLeft instanceof Three) && (minuteRight instanceof Zero)) {
-                minuteLeft.setSubtility(true);
-            } else {
-                minuteLeft.setSubtility(false);
-            }
-
-            Bitmap hourBitmap =
-                Bitmap.createBitmap(canvas.getWidth(), canvas.getHeight(), Bitmap.Config.ARGB_8888);
-            Canvas hourCanvas = new Canvas(hourBitmap);
-            Bitmap secondsBitmap = Bitmap.createBitmap(canvas.getWidth(), canvas.getHeight(), Bitmap.Config.ARGB_8888);
-            Canvas secondsCanvas = new Canvas(secondsBitmap);
-
-            // Draw the background.
-            if (isInAmbientMode()) {
-                canvas.drawColor(Color.BLACK);
-                mTextPaint.setColor(Color.WHITE);
-                mDatePaint.setColor(Color.WHITE);
-                mSecondsPaint.setColor(Color.WHITE);
-            } else {
-                mTextPaint.setColor(Color.BLACK);
-                mDatePaint.setColor(Color.BLACK);
-                mSecondsPaint.setColor(Color.BLACK);
-                canvas.drawRect(0, 0, bounds.width(), bounds.height(), mBackgroundPaint);
-            }
-
-            drawDate(canvas);
-
-            if (!isInAmbientMode()){
-                mSecondsPaint.setColor(Color.BLACK);
-                //mSecondsPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.DST_OVER));
-                secondsCanvas.drawArc(mSecondsPadding, mSecondsPadding, canvas.getWidth() - mSecondsPadding,
-                    canvas.getHeight() - mSecondsPadding, -90, 6 * second, false, mSecondsPaint);
-
-                if (isInAmbientMode()) {
-                    mDatePaint.setColor(Color.BLACK);
-                } else {
-                    mDatePaint.setColor(Color.WHITE);
-                }
-                mDatePaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_IN));
-                drawDate(secondsCanvas);
-                mDatePaint.setXfermode(null);
-                canvas.drawBitmap(secondsBitmap, 0, 0, new Paint());
-            }
-
-
-            hourCanvas.drawLines(hourLeft.getLeftHour(mCenterX, mCenterY, mStrokeWidth),
-                mTextPaint);
-            hourCanvas.drawLines(hourRight.getRightHour(mCenterX, mCenterY, mStrokeWidth),
-                mTextPaint);
-            hourCanvas.drawLines(minuteLeft.getLeftMinute(mCenterX, mCenterY, mStrokeWidth),
-                mTextPaint);
-            hourCanvas.drawLines(minuteRight.getRightMinute(mCenterX, mCenterY, mStrokeWidth),
-                mTextPaint);
-
-            if (!isInAmbientMode()){
-                mSecondsPaint.setColor(Color.WHITE);
-                mSecondsPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_ATOP));
-                hourCanvas.drawArc(mSecondsPadding, mSecondsPadding, canvas.getWidth() - mSecondsPadding,
-                    canvas.getHeight() - mSecondsPadding, -90, 6 * second, false, mSecondsPaint);
-                mSecondsPaint.setXfermode(null);
-            }
-
-            if (isInAmbientMode()) {
-                mDatePaint.setColor(Color.BLACK);
-            } else {
-                mDatePaint.setColor(Color.WHITE);
-            }
-            mDatePaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_IN));
-            drawDate(hourCanvas);
-            mDatePaint.setXfermode(null);
-
-            canvas.drawBitmap(hourBitmap, 0, 0, new Paint());
+            List<Integer> ids = DrawablePicker.getDrawablesIds(mCalendar);
+            device.onDraw(canvas, bounds, mCalendar, isInAmbientMode(), ids.get(0), ids.get(1), ids.get(3), ids.get(2));
 
         }
 
         private void drawDate(Canvas canvas) {
 
-            String date = DateFormat.getDateInstance(DateFormat.SHORT, Locale.getDefault())
-                .format(mCalendar.getTime());
+            String date = DateFormat.getDateInstance(DateFormat.SHORT, Locale.getDefault()).format(mCalendar.getTime());
 
             Rect bounds = new Rect();
             mDatePaint.getTextBounds(date, 0, date.length(), bounds);
             int x = (canvas.getWidth() / 2) - (bounds.width() / 2);
-            int y = bounds.height() + 4;
+            int y = bounds.height() + 64;
             canvas.drawText(date, x, y, mDatePaint);
         }
 

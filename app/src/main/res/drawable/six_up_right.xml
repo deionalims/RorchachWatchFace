@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="400dp"
+    android:height="400dp"
+    android:viewportWidth="400"
+    android:viewportHeight="400">
+
+    <group>
+        <path
+            android:strokeColor="#000000"
+            android:strokeWidth="36"
+            android:strokeLineCap="round"
+            android:pathData="M 300.00,73.38 C 300.00,73.38 360.00,83.25 360.00,83.25" />
+    </group>
+    <group>
+        <path
+            android:strokeColor="#000000"
+            android:strokeWidth="36"
+            android:strokeLineCap="round"
+            android:pathData="M 300.00,180.00 C 300.00,180.00 300.00,73.45 300.00,73.45" />
+    </group>
+    <group>
+        <path
+            android:strokeColor="#000000"
+            android:strokeWidth="36"
+            android:strokeLineCap="round"
+            android:pathData="M 340.00,120.00 C 340.00,120.00 300.00,120.00 300.00,120.00" />
+    </group>
+    <group>
+        <path
+            android:strokeColor="#000000"
+            android:strokeWidth="36"
+            android:strokeLineCap="round"
+            android:pathData="M 340.00,120.00 C 340.00,120.00 340.00,180.00 340.00,180.00" />
+    </group>
+    <group>
+        <path
+            android:strokeColor="#000000"
+            android:strokeWidth="36"
+            android:strokeLineCap="round"
+            android:pathData="M 300.00,180.00 C 300.00,180.00 340.00,180.00 340.00,180.00" />
+    </group>
+    <path
+        android:strokeColor="#000000"
+        android:strokeWidth="36"
+        android:strokeLineCap="round"
+        android:pathData="M 320.00,160.00 C 320.00,160.00 320.00,140.00 320.00,140.00" />
+</vector>
