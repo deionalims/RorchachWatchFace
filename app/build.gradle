@@ -2,7 +2,7 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 25
-    buildToolsVersion "26.0.1"
+    buildToolsVersion "26.0.2"
     defaultConfig {
         applicationId "com.nalims.rorchachwatchface"
         minSdkVersion 23
@@ -20,7 +20,7 @@ android {
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
-    provided 'com.google.android.wearable:wearable:2.0.5'
-    compile 'com.google.android.support:wearable:2.0.5'
-    compile 'com.google.android.gms:play-services-wearable:11.0.4'
+    provided 'com.google.android.wearable:wearable:2.1.0'
+    compile 'com.google.android.support:wearable:2.1.0'
+    compile 'com.google.android.gms:play-services-wearable:11.8.0'
 }

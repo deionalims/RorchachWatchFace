@@ -32,12 +32,9 @@ import android.support.wearable.watchface.CanvasWatchFaceService;
 import android.support.wearable.watchface.WatchFaceStyle;
 import android.view.SurfaceHolder;
 import android.view.WindowInsets;
-import android.widget.Toast;
 import java.lang.ref.WeakReference;
-import java.text.DateFormat;
 import java.util.Calendar;
 import java.util.List;
-import java.util.Locale;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
@@ -91,10 +88,6 @@ public class RorchachWatchFace extends CanvasWatchFaceService {
         Paint mBackgroundPaint;
         Device device;
 
-        Paint mTextPaint;
-        Paint mDatePaint;
-        Paint mSecondsPaint;
-
         boolean mAmbient;
         Calendar mCalendar;
         final BroadcastReceiver mTimeZoneReceiver = new BroadcastReceiver() {
@@ -104,19 +97,6 @@ public class RorchachWatchFace extends CanvasWatchFaceService {
                 invalidate();
             }
         };
-        float mXOffset;
-        float mYOffset;
-
-        float mStrokeWidth;
-        float mSpace;
-        float mCenterX;
-        float mCenterY;
-        float mSecondsPadding;
-        float destRectHeight;
-        Rect desUpLeftRect;
-        Rect destUpRightRect;
-        Rect destDownLeftRect;
-        Rect destDownRightRect;
 
         /**
          * Whether the display supports fewer bits for each color in ambient mode. When true, we
@@ -136,36 +116,18 @@ public class RorchachWatchFace extends CanvasWatchFaceService {
                     .build());
             Resources resources = RorchachWatchFace.this.getResources();
 
-            mYOffset = resources.getDimension(R.dimen.digital_y_offset);
-
             mBackgroundPaint = new Paint();
             mBackgroundPaint.setColor(resources.getColor(R.color.background));
-
-            mTextPaint = createTextPaint(resources.getColor(R.color.digital_text));
-            mDatePaint = createDatePaint();
-            mSecondsPaint = createSecondsPaint();
-
-            mSpace = resources.getDimension(R.dimen.space);
-            mSecondsPadding = 0;// resources.getDimension(R.dimen.paddingTop);
 
             mCalendar = Calendar.getInstance();
         }
 
         @Override
         public void onSurfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-            mCenterX = width / 2;
-            mCenterY = height / 2;
+            float centerX = width / 2;
+            float centerY = height / 2;
 
-            mStrokeWidth = ((mCenterX / 2) - 4 * mSpace) / 2;
-
-            mTextPaint.setStrokeWidth(mStrokeWidth);
-
-            destUpRightRect = new Rect(width / 2, height / 8, width, height / 2);
-            destRectHeight = (height / 8) + destUpRightRect.height() / 2;
-
-            device = new Device(getApplicationContext(), mCenterX, mCenterY);
-
-
+            device = new Device(getApplicationContext(), centerX, centerY);
 
             super.onSurfaceChanged(holder, format, width, height);
         }
@@ -174,32 +136,6 @@ public class RorchachWatchFace extends CanvasWatchFaceService {
         public void onDestroy() {
             mUpdateTimeHandler.removeMessages(MSG_UPDATE_TIME);
             super.onDestroy();
-        }
-
-        private Paint createTextPaint(int textColor) {
-            Paint paint = new Paint();
-            paint.setColor(textColor);
-            paint.setTypeface(NORMAL_TYPEFACE);
-            paint.setAntiAlias(true);
-            paint.setStrokeCap(Paint.Cap.ROUND);
-
-            return paint;
-        }
-
-        private Paint createDatePaint() {
-            Paint paint = new Paint();
-            paint.setTypeface(BOLD_TYPEFACE);
-            paint.setAntiAlias(true);
-            paint.setTextSize(24);
-            return paint;
-        }
-
-        private Paint createSecondsPaint() {
-            Paint secondsPaint = new Paint();
-            secondsPaint.setStyle(Paint.Style.STROKE);
-            secondsPaint.setAntiAlias(true);
-            secondsPaint.setStrokeWidth(16);
-            return secondsPaint;
         }
 
         @Override
@@ -241,15 +177,6 @@ public class RorchachWatchFace extends CanvasWatchFaceService {
         @Override
         public void onApplyWindowInsets(WindowInsets insets) {
             super.onApplyWindowInsets(insets);
-
-            // Load resources that have alternate values for round watches.
-            Resources resources = RorchachWatchFace.this.getResources();
-            boolean isRound = insets.isRound();
-            mXOffset = resources.getDimension(isRound ? R.dimen.digital_x_offset_round : R.dimen.digital_x_offset);
-            float textSize =
-                resources.getDimension(isRound ? R.dimen.digital_text_size_round : R.dimen.digital_text_size);
-
-            mTextPaint.setTextSize(textSize);
         }
 
         @Override
@@ -269,9 +196,6 @@ public class RorchachWatchFace extends CanvasWatchFaceService {
             super.onAmbientModeChanged(inAmbientMode);
             if (mAmbient != inAmbientMode) {
                 mAmbient = inAmbientMode;
-                if (mLowBitAmbient) {
-                    mTextPaint.setAntiAlias(!inAmbientMode);
-                }
                 invalidate();
             }
 
@@ -295,8 +219,10 @@ public class RorchachWatchFace extends CanvasWatchFaceService {
                     break;
                 case TAP_TYPE_TAP:
                     // The user has completed the tap gesture.
-                    // TODO: Add code to handle the tap gesture.
-                    Toast.makeText(getApplicationContext(), R.string.message, Toast.LENGTH_SHORT).show();
+                    Intent calendarIntent = new Intent();
+                    calendarIntent.setAction(Intent.ACTION_MAIN);
+                    calendarIntent.addCategory(Intent.CATEGORY_APP_CALENDAR);
+                    startActivity(calendarIntent);
                     break;
             }
             invalidate();
@@ -305,24 +231,12 @@ public class RorchachWatchFace extends CanvasWatchFaceService {
         @Override
         public void onDraw(Canvas canvas, Rect bounds) {
 
-            // Draw H:MM in ambient mode or H:MM:SS in interactive mode.
             long now = System.currentTimeMillis();
             mCalendar.setTimeInMillis(now);
 
             List<Integer> ids = DrawablePicker.getDrawablesIds(mCalendar);
             device.onDraw(canvas, bounds, mCalendar, isInAmbientMode(), ids.get(0), ids.get(1), ids.get(3), ids.get(2));
 
-        }
-
-        private void drawDate(Canvas canvas) {
-
-            String date = DateFormat.getDateInstance(DateFormat.SHORT, Locale.getDefault()).format(mCalendar.getTime());
-
-            Rect bounds = new Rect();
-            mDatePaint.getTextBounds(date, 0, date.length(), bounds);
-            int x = (canvas.getWidth() / 2) - (bounds.width() / 2);
-            int y = bounds.height() + 64;
-            canvas.drawText(date, x, y, mDatePaint);
         }
 
         /**
