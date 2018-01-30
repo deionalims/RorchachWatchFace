@@ -220,8 +220,9 @@ public class RorchachWatchFace extends CanvasWatchFaceService {
                 case TAP_TYPE_TAP:
                     // The user has completed the tap gesture.
                     Intent calendarIntent = new Intent();
-                    calendarIntent.setAction(Intent.ACTION_MAIN);
-                    calendarIntent.addCategory(Intent.CATEGORY_APP_CALENDAR);
+                    calendarIntent.setAction(Intent.ACTION_MAIN)
+                        .addCategory(Intent.CATEGORY_APP_CALENDAR)
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     startActivity(calendarIntent);
                     break;
             }
