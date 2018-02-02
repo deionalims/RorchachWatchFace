@@ -113,6 +113,7 @@ public class RorchachWatchFace extends CanvasWatchFaceService {
                     .setBackgroundVisibility(WatchFaceStyle.BACKGROUND_VISIBILITY_INTERRUPTIVE)
                     .setShowSystemUiTime(false)
                     .setAcceptsTapEvents(true)
+                    .setViewProtectionMode(WatchFaceStyle.PROTECT_STATUS_BAR)
                     .build());
             Resources resources = RorchachWatchFace.this.getResources();
 
