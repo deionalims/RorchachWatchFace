@@ -79,14 +79,16 @@ public class Device {
         layerDrawable.draw(hourCanvas);
         hourCanvas.restore();
 
+        datePaint.setColor(isInAmbientMode ? Color.WHITE : Color.BLACK);
+        drawDate(canvas, calendar.getTime());
+        datePaint.setColor(isInAmbientMode ? Color.BLACK : Color.WHITE);
+        datePaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_IN));
+        drawDate(hourCanvas, calendar.getTime());
+        datePaint.setXfermode(null);
+        datePaint.setColor(isInAmbientMode ? Color.WHITE : Color.BLACK);
+
         if (!isInAmbientMode){
             int seconds = calendar.get(Calendar.SECOND);
-            drawDate(canvas, calendar.getTime());
-            datePaint.setColor(Color.WHITE);
-            datePaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_IN));
-            drawDate(hourCanvas, calendar.getTime());
-            datePaint.setXfermode(null);
-            datePaint.setColor(Color.BLACK);
 
             secondsPaint.setColor(Color.BLACK);
             canvas.drawArc(0, 0, canvas.getWidth(), canvas.getHeight(), -90, 6 * seconds, false, secondsPaint);
