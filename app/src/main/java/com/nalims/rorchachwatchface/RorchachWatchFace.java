@@ -43,8 +43,6 @@ import java.util.concurrent.TimeUnit;
  * low-bit ambient mode, the text is drawn without anti-aliasing in ambient mode.
  */
 public class RorchachWatchFace extends CanvasWatchFaceService {
-    private static final Typeface NORMAL_TYPEFACE = Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL);
-    private static final Typeface BOLD_TYPEFACE = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD);
 
     /**
      * Update rate in milliseconds for interactive mode. We update once a second since seconds are
@@ -220,11 +218,12 @@ public class RorchachWatchFace extends CanvasWatchFaceService {
                     break;
                 case TAP_TYPE_TAP:
                     // The user has completed the tap gesture.
-                    Intent calendarIntent = new Intent();
-                    calendarIntent.setAction(Intent.ACTION_MAIN)
-                        .addCategory(Intent.CATEGORY_APP_CALENDAR)
-                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    startActivity(calendarIntent);
+                    // Display calendar removed for now
+//                    Intent calendarIntent = new Intent();
+//                    calendarIntent.setAction(Intent.ACTION_MAIN)
+//                        .addCategory(Intent.CATEGORY_APP_CALENDAR)
+//                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+//                    startActivity(calendarIntent);
                     break;
             }
             invalidate();
